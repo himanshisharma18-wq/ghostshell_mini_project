@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="GhostShell ghost mark">
+  <rect width="512" height="512" rx="112" fill="#080d0d"/>
+  <path d="M112 411V236c0-91 61-157 144-157s144 66 144 157v175l-46-29-48 29-50-29-50 29-48-29-46 29Z" fill="#a8f5bf"/>
+  <ellipse cx="211" cy="247" rx="16" ry="25" fill="#173727"/>
+  <ellipse cx="301" cy="247" rx="16" ry="25" fill="#173727"/>
+  <ellipse cx="256" cy="303" rx="11" ry="15" fill="#36724c"/>
+  <path d="M185 337c15 9 29 9 44 0m54 0c15 9 29 9 44 0" fill="none" stroke="#62b982" stroke-linecap="round" stroke-width="8" opacity=".48"/>
+</svg>

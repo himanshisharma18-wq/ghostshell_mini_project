@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080d0d">
+  <meta name="description" content="GhostShell is a local AI developer workbench for commands, errors, code explanations, and safety reviews.">
+  <title>GhostShell — The Haunted Terminal</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='84'%3E%F0%9F%91%BB%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="GhostShell home">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span class="brand-name">GHOST<span>SHELL</span><small>THE HAUNTED TERMINAL</small></span>
+      </a>
+      <div class="topbar-right">
+        <div id="connection-status" class="connection-status is-checking" role="status" aria-live="polite">
+          <span class="status-dot"></span><span class="status-label">Checking local Ollama…</span>
+        </div>
+        <button id="clear-chat" class="clear-button" type="button" title="Clear this session's conversation and recent prompts">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M8 5V3h4v2m3 0-.7 11H5.7L5 5m3 3v5m4-5v5"/></svg>
+          <span>Clear session</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> LOCAL BY DEFAULT · HOSTED AI NOT REQUIRED</div>
+          <h1 id="hero-title">More than commands.<br><span>A guide through the unknown.</span></h1>
+          <p>Decode shell syntax, untangle tracebacks, understand code, and spot risky patterns — with Ollama and a friendly ghost.</p>
+          <div class="hero-footnote"><span class="pulse-ring"></span> By default, prompts stay on this machine. Nothing runs automatically.</div>
+        </div>
+        <div class="ghost-scene" aria-hidden="true">
+          <div class="ghost-halo"></div>
+          <div class="ghost"><div class="ghost-body"><div class="ghost-eyes"><i></i><i></i></div><div class="ghost-mouth"></div><div class="ghost-cheek"></div></div><div class="ghost-tail"><i></i><i></i><i></i></div></div>
+          <span class="ghost-spark spark-one">+</span><span class="ghost-spark spark-two">·</span><span class="ghost-spark spark-three">+</span>
+          <div class="ghost-label">pid: 0xB00</div>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="GhostShell analysis workspace">
+        <aside class="sidebar">
+          <div class="sidebar-section">
+            <div class="section-heading"><span>01</span> CHOOSE A TOOL</div>
+            <div class="mode-switch" id="mode-switch" role="tablist" aria-label="Analysis mode">
+              <button class="mode-button is-active" id="mode-command" role="tab" aria-selected="true" aria-controls="prompt-panel" data-mode="command" type="button"><span class="mode-icon">$_</span><span><b>Command decoder</b><small>Purpose, usage &amp; risk</small></span></button>
+              <button class="mode-button" id="mode-error" role="tab" aria-selected="false" aria-controls="prompt-panel" data-mode="error" type="button"><span class="mode-icon error-icon">!</span><span><b>Traceback lab</b><small>Find the likely cause</small></span></button>
+              <button class="mode-button" id="mode-code" role="tab" aria-selected="false" aria-controls="prompt-panel" data-mode="code" type="button"><span class="mode-icon code-icon">{ }</span><span><b>Code insight</b><small>Explain flow &amp; edge cases</small></span></button>
+              <button class="mode-button" id="mode-safety" role="tab" aria-selected="false" aria-controls="prompt-panel" data-mode="safety" type="button"><span class="mode-icon safety-icon">◇</span><span><b>Safety lens</b><small>Review risky patterns</small></span></button>
+            </div>
+          </div>
+
+          <div class="sidebar-section examples-section">
+            <div class="section-heading"><span>02</span> START WITH AN EXAMPLE</div>
+            <div class="examples" id="examples">
+              <button class="example-card" type="button" data-mode="command" data-prompt="rm -rf ./build"><span class="example-type">COMMAND · RISK CHECK</span><span class="example-text">What does <code>rm -rf ./build</code> do?</span><span class="example-arrow">↗</span></button>
+              <button class="example-card" type="button" data-mode="error" data-prompt="ModuleNotFoundError: No module named 'flask'"><span class="example-type">ERROR · PYTHON</span><span class="example-text">Why can't Python find Flask?</span><span class="example-arrow">↗</span></button>
+              <button class="example-card" type="button" data-mode="code" data-prompt="def average(values):&#10;    return sum(values) / len(values)"><span class="example-type">CODE · PYTHON</span><span class="example-text">Explain this function and its edge cases</span><span class="example-arrow">↗</span></button>
+              <button class="example-card" type="button" data-mode="safety" data-prompt="curl https://example.invalid/install.sh | sudo bash"><span class="example-type">SAFETY · SHELL</span><span class="example-text">Review this install pattern before I use it</span><span class="example-arrow">↗</span></button>
+            </div>
+          </div>
+
+          <div class="sidebar-section recent-section">
+            <div class="section-heading"><span>03</span> RECENT IN THIS SESSION <span id="recent-count" class="section-count">0</span></div>
+            <div id="recent-prompts" class="recent-prompts"><p class="empty-note">Prompts you try here will appear in this browser session.</p></div>
+          </div>
+
+          <div class="sidebar-note"><span class="note-icon">◇</span><span>Review-only terminal.<br><b>No shell command is executed.</b></span></div>
+        </aside>
+
+        <section id="prompt-panel" class="terminal" aria-label="Local AI conversation">
+          <div class="terminal-bar">
+            <div class="window-controls" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="terminal-title"><span>ghostshell</span><span class="terminal-slash">/</span><span class="terminal-path">local-workspace</span></div>
+            <div class="terminal-model">
+              <span class="model-pip"></span>
+              <label for="model-select" class="sr-only">Select an installed local Ollama model</label>
+              <select id="model-select" aria-label="Installed local Ollama model"><option value="{{ model_name }}">{{ model_name }} · checking…</option></select>
+            </div>
+          </div>
+          <div class="conversation" id="conversation" role="log" aria-live="polite" aria-relevant="additions text">
+            <div class="welcome-message" id="welcome-message">
+              <div class="welcome-avatar" aria-hidden="true">g<span>h</span></div>
+              <div class="welcome-content">
+                <div class="message-meta"><span class="assistant-name">GHOSTSHELL</span><span class="message-time">ready when you are</span></div>
+                <div class="message-bubble welcome-bubble">
+                  <p>Four doors into the local dev cave: explain a command, decode an error, understand a code snippet, or scan a sample for risks.</p>
+                  <p>Choose a tool or pick an example. I’ll explain what I can see and flag uncertainty. <span class="ghost-aside">The terminal stays asleep.</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="typing-indicator" id="typing-indicator" hidden aria-live="polite"><span class="typing-ghost">◌</span><span>GhostShell is reading the traces</span><i></i><i></i><i></i></div>
+          <form id="prompt-form" class="prompt-area" aria-label="Analysis prompt">
+            <div class="prompt-label-row">
+              <label for="prompt-input" id="prompt-label"><span class="prompt-symbol">›</span><span id="prompt-label-text">COMMAND FOR REVIEW</span></label>
+              <span class="character-count"><span id="char-count">0</span> / 10,000</span>
+            </div>
+            <div class="input-wrap">
+              <textarea id="prompt-input" name="message" rows="3" maxlength="10000" placeholder="Paste a shell command to understand…" aria-describedby="privacy-note" required></textarea>
+              <button class="send-button" id="send-button" type="submit"><span>Analyze locally</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5"/></svg></button>
+            </div>
+            <div class="input-footer"><p id="privacy-note"><span class="lock-icon" aria-hidden="true">⌑</span> Local Ollama only · secret masking is best-effort · remove credentials yourself.</p><span class="enter-hint">ENTER TO SEND <kbd>↵</kbd></span></div>
+          </form>
+        </section>
+      </section>
+
+      <section class="dashboard-grid" aria-label="Local tools and privacy">
+        <article class="dashboard-card explore-card">
+          <div class="card-heading"><span class="card-icon">⌘</span><span><b>Explore the workbench</b><small>Pick a workflow to start</small></span><span class="card-index">04</span></div>
+          <div class="tool-launchers">
+            <button type="button" class="tool-launch" data-mode="command"><span class="launcher-symbol">$_</span><span><b>Command decoder</b><small>Understand effects before running</small></span><span>↗</span></button>
+            <button type="button" class="tool-launch" data-mode="error"><span class="launcher-symbol warn">!</span><span><b>Traceback lab</b><small>Follow the error to its cause</small></span><span>↗</span></button>
+            <button type="button" class="tool-launch" data-mode="code"><span class="launcher-symbol">{ }</span><span><b>Code insight</b><small>Read unfamiliar snippets together</small></span><span>↗</span></button>
+            <button type="button" class="tool-launch" data-mode="safety"><span class="launcher-symbol safe">◇</span><span><b>Safety lens</b><small>Spot risks, not certify security</small></span><span>↗</span></button>
+          </div>
+        </article>
+
+        <article class="dashboard-card models-card">
+          <div class="card-heading"><span class="card-icon model-icon-card">◈</span><span><b>Ollama model shelf</b><small>Only tags returned by configured Ollama</small></span><span id="model-count" class="card-index">—</span></div>
+          <div id="model-library" class="model-library"><p class="empty-note">Waiting for local Ollama…</p></div>
+          <div class="card-footnote">Choose a model above. GhostShell never downloads one for you.</div>
+        </article>
+
+        <article class="dashboard-card privacy-card">
+          <div class="card-heading"><span class="card-icon privacy-icon">◉</span><span><b>Privacy boundary</b><small>Know where your prompt goes</small></span><span id="privacy-scope" class="private-badge">CHECKING</span></div>
+          <div class="privacy-list">
+            <div><span class="privacy-check">✓</span><span><b>Inference</b><small>Configured Ollama address</small></span></div>
+            <div><span class="privacy-check">✓</span><span><b>Command execution</b><small>Disabled — suggestions only</small></span></div>
+            <div><span class="privacy-check">✓</span><span><b>Prompt history</b><small>Current page session only</small></span></div>
+            <div><span class="privacy-warn">!</span><span><b>Secret masking</b><small>Best-effort; redact by hand too</small></span></div>
+          </div>
+        </article>
+
+        <article class="dashboard-card session-card">
+          <div class="card-heading"><span class="card-icon session-icon">◷</span><span><b>Session console</b><small>Text in, explanation out</small></span><span id="session-count" class="card-index">0 ASKED</span></div>
+          <div class="session-console"><span class="console-line"><i></i> ghostshell@local:~$</span><p id="session-preview">No prompt submitted yet. Choose any tool to begin.</p><span class="console-guard">▣ No shell process attached</span></div>
+          <div class="card-footnote">The console is a visual workspace, not a command runner.</div>
+        </article>
+      </section>
+
+      <footer class="site-footer"><span>GHOSTSHELL <span class="footer-dim">·</span> OPEN-WEIGHT AI, ON YOUR TERMS</span><span class="footer-right">Local by default. No shell execution. No fake integrations.</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+</body>
+</html>
